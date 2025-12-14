@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Vendor Event Dashboard</h1>
+        <div class="filters">
+            <label for="period-filter">Time Period:</label>
+            <select id="period-filter">
+                <option value="last24hours">Last 24 Hours</option>
+                <option value="last7days">Last 7 Days</option>
+                <option value="last30days">Last 30 Days</option>
+            </select>
+            <button id="filter-button">Apply Filters</button>
+        </div>
+        <table id="events-table">
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Product Name</th>
+                    <th>Product Image</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Event rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+    <script src="dashboard.js"></script>
+</body>
+</html>
