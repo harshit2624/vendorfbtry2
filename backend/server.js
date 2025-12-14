@@ -63,7 +63,7 @@ app.post('/track-event', async (req, res) => {
 });
 
 app.get('/data', async (req, res) => {
-    const { storeCode } = req.query;
+    const { storeCode, event, period } = req.query;
 
     if (!storeCode) {
         return res.status(400).send('storeCode is required');
@@ -73,11 +73,140 @@ app.get('/data', async (req, res) => {
     const events = db.collection('events');
 
     try {
-        const vendorEvents = await events.find({ storeCode }).sort({ timestamp: -1 }).toArray();
+        const query = { storeCode };
+
+        if (event && event !== 'all') {
+            query.eventName = event;
+        }
+
+        if (period) {
+            const now = new Date();
+            let startDate;
+
+            if (period === 'last24hours') {
+                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            } else if (period === 'last7days') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (period === 'last30days') {
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            if (startDate) {
+                query.timestamp = { $gte: startDate };
+            }
+        }
+
+        const vendorEvents = await events.find(query).sort({ timestamp: -1 }).toArray();
         res.status(200).json(vendorEvents);
     } catch (err) {
         console.error('Failed to fetch events', err);
         res.status(500).send('Failed to fetch events');
+    }
+});
+
+app.get('/top-viewed-products', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+
+    try {
+        const query = { storeCode, eventName: 'page_view' };
+
+        if (period) {
+            const now = new Date();
+            let startDate;
+
+            if (period === 'last24hours') {
+                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            } else if (period === 'last7days') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (period === 'last30days') {
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            if (startDate) {
+                query.timestamp = { $gte: startDate };
+            }
+        }
+
+        const topProducts = await events.aggregate([
+            { $match: query },
+            { $group: {
+                _id: { productName: "$productName", productImage: "$productImage" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+            { $project: {
+                _id: 0,
+                productName: "$_id.productName",
+                productImage: "$_id.productImage",
+                count: 1
+            }}
+        ]).toArray();
+
+        res.status(200).json(topProducts);
+    } catch (err) {
+        console.error('Failed to fetch top viewed products', err);
+        res.status(500).send('Failed to fetch top viewed products');
+    }
+});
+
+app.get('/top-added-to-cart-products', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+
+    try {
+        const query = { storeCode, eventName: 'add_to_cart' };
+
+        if (period) {
+            const now = new Date();
+            let startDate;
+
+            if (period === 'last24hours') {
+                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            } else if (period === 'last7days') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (period === 'last30days') {
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            if (startDate) {
+                query.timestamp = { $gte: startDate };
+            }
+        }
+
+        const topProducts = await events.aggregate([
+            { $match: query },
+            { $group: {
+                _id: { productName: "$productName", productImage: "$productImage" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+            { $project: {
+                _id: 0,
+                productName: "$_id.productName",
+                productImage: "$_id.productImage",
+                count: 1
+            }}
+        ]).toArray();
+
+        res.status(200).json(topProducts);
+    } catch (err) {
+        console.error('Failed to fetch top added to cart products', err);
+        res.status(500).send('Failed to fetch top added to cart products');
     }
 });
 

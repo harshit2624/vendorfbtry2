@@ -4,7 +4,7 @@
 // The vendor will need to change this to their unique store code.
 const STORE_CODE = 'your-unique-store-code';
 // The URL of your backend server.
-const YOUR_SERVER_URL = 'http://localhost:3000';
+const YOUR_SERVER_URL = 'https://pixeltracker-32pl.onrender.com';
 // ---------------------
 
 /**
