@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Use a local server for development/testing
-    const backendUrl = 'http://localhost:3000';
+    // The URL of your deployed backend server.
+    const backendUrl = 'https://pixeltracker-32pl.onrender.com';
 
     const eventsTableBody = document.getElementById('events-table-body');
     const topViewedContainer = document.getElementById('top-viewed-products');
