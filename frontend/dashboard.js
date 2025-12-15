@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventTypes = {
             'ViewContent': 'View Content',
             'AddToCart': 'Add to Cart',
-            'initiate_checkout': 'Initiate Checkout',
-            'purchase': 'Purchases'
+            'InitiateCheckout': 'Initiate Checkout',
+            'Purchase': 'Purchases'
         };
 
         for (const key in eventTypes) {
