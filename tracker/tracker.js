@@ -3,6 +3,7 @@
 // --- Configuration ---
 // The vendor will need to change this to their unique store code.
 const STORE_CODE = 'your-unique-store-code';
+const BRAND_NAME = 'PIXELTRACKER';
 // The URL of your backend server.
 const YOUR_SERVER_URL = 'https://pixeltracker-32pl.onrender.com';
 // ---------------------
@@ -18,6 +19,7 @@ async function trackEvent(eventData) {
     const dataToSend = {
         ...eventData,
         storeCode: STORE_CODE,
+        brandName: BRAND_NAME,
         timestamp: new Date().toISOString()
     };
 

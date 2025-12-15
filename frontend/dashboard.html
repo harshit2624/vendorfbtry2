@@ -4,76 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <div class="logo">
-                <h1>My Store</h1>
+    <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    <div class="sidebar" id="sidebar">
+        <h1>PIXELTRACKER</h1>
+        <ul>
+            <li><a href="#" class="active">Dashboard</a></li>
+            <li><a href="#">Analytics</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="main-content">
+            <h1>Dashboard Overview</h1>
+            <p>An overview of events and product performance.</p>
+
+            <div class="stat-cards-container" id="stat-cards">
+                <!-- Stat cards for event counts will be inserted here -->
             </div>
-            <nav class="dashboard-nav">
-                <a href="#" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="#"><i class="fas fa-box-open"></i> Products</a>
-                <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
-                <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
-                <a href="#"><i class="fas fa-cog"></i> Settings</a>
-            </nav>
-        </header>
-        <main class="main-content">
-            <div class="main-header">
-                <h2>Dashboard Overview</h2>
-                <div class="filters">
-                    <label for="event-filter">Filter by Event:</label>
-                    <select id="event-filter">
-                        <option value="all">All Events</option>
-                        <option value="page_view">Page View</option>
-                        <option value="add_to_cart">Add to Cart</option>
-                        <option value="remove_from_cart">Remove from Cart</option>
-                        <option value="initiate_checkout">Initiate Checkout</option>
-                    </select>
+
+            <h2>Top Viewed Products</h2>
+            <div class="scrollable-row" id="top-viewed-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
+            <h2>Top "Add to Cart" Products</h2>
+            <div class="scrollable-row" id="top-added-to-cart-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
+            <form id="filter-form" class="filter-form">
+                <div class="filter-group">
                     <label for="period-filter">Time Period:</label>
                     <select id="period-filter">
                         <option value="last24hours">Last 24 Hours</option>
                         <option value="last7days">Last 7 Days</option>
                         <option value="last30days">Last 30 Days</option>
                     </select>
-                    <button id="filter-button">Apply</button>
                 </div>
-            </div>
-
-            <div class="card product-row">
-                <h3>Top Viewed Products</h3>
-                <div class="scrollable-row" id="top-viewed-products">
-                    <!-- Product cards will be inserted here -->
+                <div class="filter-group">
+                    <label for="event-filter">Event Type:</label>
+                    <select id="event-filter">
+                        <option value="all">All Events</option>
+                        <option value="ViewContent">View Content</option>
+                        <option value="AddToCart">Add to Cart</option>
+                        <option value="RemoveFromCart">Remove from Cart</option>
+                        <option value="InitiateCheckout">Initiate Checkout</option>
+                        <option value="Purchase">Purchase</option>
+                    </select>
                 </div>
-            </div>
+                <button type="button" id="filter-button" class="button">Filter</button>
+            </form>
 
-            <div class="card product-row">
-                <h3>Top Added to Cart Products</h3>
-                <div class="scrollable-row" id="top-added-to-cart-products">
-                    <!-- Product cards will be inserted here -->
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Recent Events</h3>
-                <table id="events-table">
-                    <thead>
-                        <tr>
-                            <th>Event Name</th>
-                            <th>Product Name</th>
-                            <th>Product Image</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Event rows will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-        </main>
+            <h2>Filtered Events</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Image</th>
+                        <th>Product Name</th>
+                        <th>Event Type</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="events-table-body">
+                    <!-- Event rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
     </div>
     <script src="dashboard.js"></script>
 </body>

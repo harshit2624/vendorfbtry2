@@ -5,11 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const backendUrl = 'https://pixeltracker-32pl.onrender.com';
+    // Use a local server for development/testing
+    const backendUrl = 'http://localhost:3000';
 
-    const eventsTableBody = document.querySelector('#events-table tbody');
+    const eventsTableBody = document.getElementById('events-table-body');
     const topViewedContainer = document.getElementById('top-viewed-products');
     const topAddedToCartContainer = document.getElementById('top-added-to-cart-products');
+    const statCardsContainer = document.getElementById('stat-cards');
     
     const eventFilter = document.getElementById('event-filter');
     const periodFilter = document.getElementById('period-filter');
@@ -19,6 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchEvents();
         fetchTopViewedProducts();
         fetchTopAddedToCartProducts();
+        fetchEventCounts();
+    }
+
+    async function fetchEventCounts() {
+        const period = periodFilter.value;
+        try {
+            const response = await fetch(`${backendUrl}/event-counts?storeCode=${storeCode}&period=${period}`);
+            if (!response.ok) throw new Error('Failed to fetch event counts');
+            const counts = await response.json();
+            renderStatCards(counts);
+        } catch (error) {
+            console.error('Error fetching event counts:', error);
+            statCardsContainer.innerHTML = '<p>Could not load stats.</p>';
+        }
     }
 
     async function fetchEvents() {
@@ -55,10 +71,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${backendUrl}/top-added-to-cart-products?storeCode=${storeCode}&period=${period}`);
             if (!response.ok) throw new Error('Failed to fetch top added to cart products');
             const products = await response.json();
-            renderProductRow(products, topAddedToCartContainer, 'Adds');
+            renderProductRow(products, topAddedToCartContainer, 'Adds to Cart');
         } catch (error) {
             console.error('Error fetching top added to cart products:', error);
             topAddedToCartContainer.innerHTML = '<p>Could not load products.</p>';
+        }
+    }
+
+    function renderStatCards(counts) {
+        statCardsContainer.innerHTML = '';
+        const eventTypes = {
+            'ViewContent': 'View Content',
+            'AddToCart': 'Add to Cart',
+            'initiate_checkout': 'Initiate Checkout',
+            'purchase': 'Purchases'
+        };
+
+        for (const key in eventTypes) {
+            const card = document.createElement('div');
+            card.className = 'stat-card';
+            card.innerHTML = `
+                <h4>${eventTypes[key]}</h4>
+                <p>${counts[key] || 0}</p>
+            `;
+            statCardsContainer.appendChild(card);
         }
     }
 
@@ -71,10 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         events.forEach(event => {
             const row = document.createElement('tr');
+            // Sanitize event name for use in a CSS class
+            const eventClass = event.eventName ? `event-${event.eventName.toLowerCase().replace(/\s+/g, '_')}` : 'event-other';
             row.innerHTML = `
-                <td>${event.eventName}</td>
-                <td>${event.productName}</td>
                 <td><img src="${event.productImage}" alt="${event.productName}" onerror="this.style.display='none'"></td>
+                <td>${event.productName || 'N/A'}</td>
+                <td><span class="event-type ${eventClass}">${event.eventName || 'Unknown'}</span></td>
                 <td>${new Date(event.timestamp).toLocaleString()}</td>
             `;
             eventsTableBody.appendChild(row);
@@ -93,8 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'product-card';
             card.innerHTML = `
                 <img src="${product.productImage}" alt="${product.productName}" onerror="this.style.display='none'">
-                <h4>${product.productName}</h4>
-                <p>${product.count} ${countLabel}</p>
+                <div class="product-card-content">
+                    <h4>${product.productName}</h4>
+                    <p>${product.count} ${countLabel}</p>
+                </div>
             `;
             container.appendChild(card);
         });
@@ -102,6 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filterButton.addEventListener('click', fetchAllData);
 
+    const logoutButton = document.getElementById('logout-button');
+    logoutButton.addEventListener('click', () => {
+        localStorage.removeItem('storeCode');
+        window.location.href = 'index.html';
+    });
+
     // Initial data fetch
     fetchAllData();
+
+    // Sidebar toggle functionality
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    }
 });

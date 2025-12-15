@@ -38,7 +38,7 @@ async function connectToDb() {
 connectToDb();
 
 app.post('/track-event', async (req, res) => {
-    const { storeCode, eventName, productName, productImage } = req.body;
+    const { storeCode, brandName, eventName, productName, productImage } = req.body;
 
     if (!storeCode || !eventName) {
         return res.status(400).send('storeCode and eventName are required');
@@ -50,6 +50,7 @@ app.post('/track-event', async (req, res) => {
     try {
         await events.insertOne({
             storeCode,
+            brandName,
             eventName,
             productName,
             productImage,
@@ -115,7 +116,7 @@ app.get('/top-viewed-products', async (req, res) => {
     const events = db.collection('events');
 
     try {
-        const query = { storeCode, eventName: 'page_view' };
+        const query = { storeCode, eventName: 'ViewContent' };
 
         if (period) {
             const now = new Date();
@@ -168,7 +169,7 @@ app.get('/top-added-to-cart-products', async (req, res) => {
     const events = db.collection('events');
 
     try {
-        const query = { storeCode, eventName: 'add_to_cart' };
+        const query = { storeCode, eventName: 'AddToCart' };
 
         if (period) {
             const now = new Date();
@@ -207,6 +208,57 @@ app.get('/top-added-to-cart-products', async (req, res) => {
     } catch (err) {
         console.error('Failed to fetch top added to cart products', err);
         res.status(500).send('Failed to fetch top added to cart products');
+    }
+});
+
+app.get('/event-counts', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+
+    try {
+        const query = { storeCode };
+
+        if (period) {
+            const now = new Date();
+            let startDate;
+
+            if (period === 'last24hours') {
+                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            } else if (period === 'last7days') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (period === 'last30days') {
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            if (startDate) {
+                query.timestamp = { $gte: startDate };
+            }
+        }
+
+        const eventCounts = await events.aggregate([
+            { $match: query },
+            { $group: {
+                _id: "$eventName",
+                count: { $sum: 1 }
+            }}
+        ]).toArray();
+
+        // Convert array to a more useful object like { page_view: 100, add_to_cart: 20 }
+        const counts = eventCounts.reduce((acc, item) => {
+            acc[item._id] = item.count;
+            return acc;
+        }, {});
+
+        res.status(200).json(counts);
+    } catch (err) {
+        console.error('Failed to fetch event counts', err);
+        res.status(500).send('Failed to fetch event counts');
     }
 });
 
