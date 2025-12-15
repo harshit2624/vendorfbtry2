@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventClass = event.eventName ? `event-${event.eventName.toLowerCase().replace(/\s+/g, '_')}` : 'event-other';
             row.innerHTML = `
                 <td><img src="${event.productImage}" alt="${event.productName}" onerror="this.style.display='none'"></td>
-                <td>${event.productName || 'N/A'}</td>
+                <td class="product-name-cell">${event.productName || 'N/A'}</td>
                 <td><span class="event-type ${eventClass}">${event.eventName || 'Unknown'}</span></td>
                 <td>${new Date(event.timestamp).toLocaleString()}</td>
             `;
