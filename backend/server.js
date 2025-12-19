@@ -36,6 +36,50 @@ async function connectToDb() {
 
 connectToDb();
 
+function getTimeFilter(period) {
+    const now = new Date();
+    let startDate;
+    let endDate = new Date(now);
+
+    switch (period) {
+        case 'today':
+            startDate = new Date(now.setHours(0, 0, 0, 0));
+            endDate = new Date(now.setHours(23, 59, 59, 999));
+            break;
+        case 'yesterday':
+            const yesterdayStart = new Date();
+            yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+            yesterdayStart.setHours(0, 0, 0, 0);
+            startDate = yesterdayStart;
+
+            const yesterdayEnd = new Date();
+            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+            yesterdayEnd.setHours(23, 59, 59, 999);
+            endDate = yesterdayEnd;
+            break;
+        case 'last24hours':
+            startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            break;
+        case 'last7days':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+        case 'last30days':
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+        case 'all':
+        default:
+            // No date filter
+            return {};
+    }
+
+    if (startDate && endDate) {
+        return { timestamp: { $gte: startDate, $lte: endDate } };
+    } else if (startDate) {
+        return { timestamp: { $gte: startDate } };
+    }
+    return {};
+}
+
 app.post('/track-event', async (req, res) => {
     const { storeCode, brandName, eventName, productName, productImage } = req.body;
 
@@ -80,20 +124,7 @@ app.get('/data', async (req, res) => {
         }
 
         if (period) {
-            const now = new Date();
-            let startDate;
-
-            if (period === 'last24hours') {
-                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            } else if (period === 'last7days') {
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            } else if (period === 'last30days') {
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            }
-
-            if (startDate) {
-                query.timestamp = { $gte: startDate };
-            }
+            Object.assign(query, getTimeFilter(period));
         }
 
         const vendorEvents = await events.find(query).sort({ timestamp: -1 }).toArray();
@@ -118,20 +149,7 @@ app.get('/top-viewed-products', async (req, res) => {
         const query = { storeCode, eventName: 'ViewContent' };
 
         if (period) {
-            const now = new Date();
-            let startDate;
-
-            if (period === 'last24hours') {
-                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            } else if (period === 'last7days') {
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            } else if (period === 'last30days') {
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            }
-
-            if (startDate) {
-                query.timestamp = { $gte: startDate };
-            }
+            Object.assign(query, getTimeFilter(period));
         }
 
         const topProducts = await events.aggregate([
@@ -171,20 +189,7 @@ app.get('/top-added-to-cart-products', async (req, res) => {
         const query = { storeCode, eventName: 'AddToCart' };
 
         if (period) {
-            const now = new Date();
-            let startDate;
-
-            if (period === 'last24hours') {
-                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            } else if (period === 'last7days') {
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            } else if (period === 'last30days') {
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            }
-
-            if (startDate) {
-                query.timestamp = { $gte: startDate };
-            }
+            Object.assign(query, getTimeFilter(period));
         }
 
         const topProducts = await events.aggregate([
@@ -224,20 +229,7 @@ app.get('/event-counts', async (req, res) => {
         const query = { storeCode };
 
         if (period) {
-            const now = new Date();
-            let startDate;
-
-            if (period === 'last24hours') {
-                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            } else if (period === 'last7days') {
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            } else if (period === 'last30days') {
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            }
-
-            if (startDate) {
-                query.timestamp = { $gte: startDate };
-            }
+            Object.assign(query, getTimeFilter(period));
         }
 
         const eventCounts = await events.aggregate([
