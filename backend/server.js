@@ -265,6 +265,102 @@ app.get('/top-checkout-products', async (req, res) => {
     }
 });
 
+app.get('/product-performance', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+    const timeFilter = getTimeFilter(period);
+
+    try {
+        const viewsPipeline = [
+            { $match: { storeCode, eventName: 'ViewContent', ...timeFilter } },
+            { $group: {
+                _id: { productName: "$productName", productImage: "$productImage" },
+                count: { $sum: 1 }
+            }}
+        ];
+
+        const atcPipeline = [
+            { $match: { storeCode, eventName: 'AddToCart', ...timeFilter } },
+            { $group: {
+                _id: { productName: "$productName", productImage: "$productImage" },
+                count: { $sum: 1 }
+            }}
+        ];
+
+        const checkoutPipeline = [
+            { $match: { storeCode, eventName: 'InitiateCheckout', ...timeFilter } },
+            { $unwind: "$contents" },
+            { $group: {
+                _id: { productName: "$contents.productName", productImage: "$contents.productImage" },
+                count: { $sum: 1 }
+            }}
+        ];
+
+        const [viewCounts, atcCounts, checkoutCounts] = await Promise.all([
+            events.aggregate(viewsPipeline).toArray(),
+            events.aggregate(atcPipeline).toArray(),
+            events.aggregate(checkoutPipeline).toArray()
+        ]);
+
+        const productPerformance = {};
+
+        viewCounts.forEach(item => {
+            const productName = item._id.productName;
+            if (!productName) return;
+            productPerformance[productName] = {
+                productName,
+                productImage: item._id.productImage,
+                views: item.count,
+                atcs: 0,
+                checkouts: 0
+            };
+        });
+
+        atcCounts.forEach(item => {
+            const productName = item._id.productName;
+            if (!productName) return;
+            if (productPerformance[productName]) {
+                productPerformance[productName].atcs = item.count;
+            } else {
+                productPerformance[productName] = {
+                    productName,
+                    productImage: item._id.productImage,
+                    views: 0,
+                    atcs: item.count,
+                    checkouts: 0
+                };
+            }
+        });
+
+        checkoutCounts.forEach(item => {
+            const productName = item._id.productName;
+            if (!productName) return;
+            if (productPerformance[productName]) {
+                productPerformance[productName].checkouts = item.count;
+            } else {
+                productPerformance[productName] = {
+                    productName,
+                    productImage: item._id.productImage,
+                    views: 0,
+                    atcs: 0,
+                    checkouts: item.count
+                };
+            }
+        });
+        
+        res.status(200).json(Object.values(productPerformance));
+    } catch (err) {
+        console.error('Failed to fetch product performance', err);
+        res.status(500).send('Failed to fetch product performance');
+    }
+});
+
 app.get('/event-counts', async (req, res) => {
     const { storeCode, period } = req.query;
 

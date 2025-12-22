@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard - Analytics</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    <div class="sidebar" id="sidebar">
+        <h1>PIXELTRACKER</h1>
+        <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="#" class="active">Analytics</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="main-content">
+            <h1>Product Performance Analytics</h1>
+            <p>Product conversion funnels.</p>
+
+            <form id="filter-form" class="filter-form">
+                <div class="filter-group">
+                    <label for="period-filter">Time Period:</label>
+                    <select id="period-filter">
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="all" selected>All Time</option>
+                        <option value="last24hours">Last 24 Hours</option>
+                        <option value="last7days">Last 7 Days</option>
+                        <option value="last30days">Last 30 Days</option>
+                    </select>
+                </div>
+                <button type="button" id="filter-button" class="button">Apply Filter</button>
+            </form>
+
+            <h2>Performance Metrics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Views</th>
+                        <th>ATCs</th>
+                        <th>Checkouts</th>
+                        <th>View-to-ATC %</th>
+                        <th>ATC-to-Checkout %</th>
+                        <th>View-to-Checkout %</th>
+                    </tr>
+                </thead>
+                <tbody id="analytics-table-body">
+                    <!-- Analytics rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="analytics.js"></script>
+</body>
+</html>

@@ -124,9 +124,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
             // Sanitize event name for use in a CSS class
             const eventClass = event.eventName ? `event-${event.eventName.toLowerCase().replace(/\s+/g, '_')}` : 'event-other';
+            
+            let productImage = event.productImage;
+            let productName = event.productName;
+
+            if (event.eventName === 'InitiateCheckout' && event.contents && event.contents.length > 0) {
+                productImage = event.contents[0].productImage;
+                productName = event.contents[0].productName;
+            }
+
             row.innerHTML = `
-                <td><img src="${event.productImage}" alt="${event.productName}" onerror="this.style.display='none'"></td>
-                <td class="product-name-cell">${event.productName || 'N/A'}</td>
+                <td><img src="${productImage || ''}" alt="${productName || 'N/A'}" onerror="this.style.display='none'"></td>
+                <td class="product-name-cell">${productName || 'N/A'}</td>
                 <td><span class="event-type ${eventClass}">${event.eventName || 'Unknown'}</span></td>
                 <td>${new Date(event.timestamp).toLocaleString()}</td>
             `;
