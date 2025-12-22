@@ -81,7 +81,7 @@ function getTimeFilter(period) {
 }
 
 app.post('/track-event', async (req, res) => {
-    const { storeCode, brandName, eventName, productName, productImage } = req.body;
+    const { storeCode, brandName, eventName, productName, productImage, value, currency, contents } = req.body;
 
     if (!storeCode || !eventName) {
         return res.status(400).send('storeCode and eventName are required');
@@ -91,14 +91,23 @@ app.post('/track-event', async (req, res) => {
     const events = db.collection('events');
 
     try {
-        await events.insertOne({
+        const eventData = {
             storeCode,
             brandName,
             eventName,
-            productName,
-            productImage,
             timestamp: new Date()
-        });
+        };
+
+        if (eventName === 'InitiateCheckout') {
+            eventData.value = value;
+            eventData.currency = currency;
+            eventData.contents = contents;
+        } else {
+            eventData.productName = productName;
+            eventData.productImage = productImage;
+        }
+
+        await events.insertOne(eventData);
         res.status(200).send('Event tracked');
     } catch (err) {
         console.error('Failed to insert event', err);
@@ -212,6 +221,47 @@ app.get('/top-added-to-cart-products', async (req, res) => {
     } catch (err) {
         console.error('Failed to fetch top added to cart products', err);
         res.status(500).send('Failed to fetch top added to cart products');
+    }
+});
+
+app.get('/top-checkout-products', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+
+    try {
+        const query = { storeCode, eventName: 'InitiateCheckout' };
+
+        if (period) {
+            Object.assign(query, getTimeFilter(period));
+        }
+
+        const topProducts = await events.aggregate([
+            { $match: query },
+            { $unwind: "$contents" },
+            { $group: {
+                _id: { productName: "$contents.productName", productImage: "$contents.productImage" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+            { $project: {
+                _id: 0,
+                productName: "$_id.productName",
+                productImage: "$_id.productImage",
+                count: 1
+            }}
+        ]).toArray();
+
+        res.status(200).json(topProducts);
+    } catch (err) {
+        console.error('Failed to fetch top checkout products', err);
+        res.status(500).send('Failed to fetch top checkout products');
     }
 });
 

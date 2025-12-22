@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventsTableBody = document.getElementById('events-table-body');
     const topViewedContainer = document.getElementById('top-viewed-products');
     const topAddedToCartContainer = document.getElementById('top-added-to-cart-products');
+    const topCheckoutContainer = document.getElementById('top-checkout-products');
     const statCardsContainer = document.getElementById('stat-cards');
     
     const eventFilter = document.getElementById('event-filter');
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchEvents();
         fetchTopViewedProducts();
         fetchTopAddedToCartProducts();
+        fetchTopCheckoutProducts();
         fetchEventCounts();
     }
 
@@ -75,6 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching top added to cart products:', error);
             topAddedToCartContainer.innerHTML = '<p>Could not load products.</p>';
+        }
+    }
+
+    async function fetchTopCheckoutProducts() {
+        const period = periodFilter.value;
+        try {
+            const response = await fetch(`${backendUrl}/top-checkout-products?storeCode=${storeCode}&period=${period}`);
+            if (!response.ok) throw new Error('Failed to fetch top checkout products');
+            const products = await response.json();
+            renderProductRow(products, topCheckoutContainer, 'in Checkouts');
+        } catch (error) {
+            console.error('Error fetching top checkout products:', error);
+            topCheckoutContainer.innerHTML = '<p>Could not load products.</p>';
         }
     }
 

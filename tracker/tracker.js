@@ -1,132 +1,153 @@
-// tracker.js
+// ==============================
+// PIXEL TRACKER – SHOPIFY SAFE (FIXED)
+// ==============================
 
-// --- Configuration ---
-// The vendor will need to change this to their unique store code.
-const STORE_CODE = 'your-unique-store-code';
-const BRAND_NAME = 'PIXELTRACKER';
-// The URL of your backend server.
+// -------- CONFIG --------
+const STORE_CODE = 'cccc';
+const BRAND_NAME = 'CROSCROW';
 const YOUR_SERVER_URL = 'https://pixeltracker-32pl.onrender.com';
-// ---------------------
+// ------------------------
 
-/**
- * Tracks an event by sending data to the backend server.
- * @param {object} eventData - The data for the event to track.
- * @param {string} eventData.eventName - The name of the event.
- * @param {string} eventData.productName - The name of the product.
- * @param {string} eventData.productImage - The URL of the product image.
- */
-async function trackEvent(eventData) {
-    const dataToSend = {
-        ...eventData,
-        storeCode: STORE_CODE,
-        brandName: BRAND_NAME,
-        timestamp: new Date().toISOString()
-    };
+const firedEvents = {};
 
-    try {
-        await fetch(`${YOUR_SERVER_URL}/track-event`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSend),
-        });
-    } catch (error) {
-        console.error('Error tracking event:', error);
-    }
+function trackEvent(eventData) {
+  const source = eventData.source || 'dom';
+  const key = `${eventData.eventName}_${source}`;
+  if (firedEvents[key]) return;
+  firedEvents[key] = true;
+
+  const payload = JSON.stringify({
+    storeCode: STORE_CODE,
+    brandName: BRAND_NAME,
+    timestamp: new Date().toISOString(),
+    ...eventData
+  });
+
+  const url = `${YOUR_SERVER_URL}/track-event`;
+
+  // ✅ MUST USE sendBeacon for checkout-related events
+  if (eventData.eventName === 'InitiateCheckout') {
+    navigator.sendBeacon(
+      url,
+      new Blob([payload], { type: 'application/json' })
+    );
+    return;
+  }
+
+  // normal events
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload,
+    keepalive: true
+  }).catch(() => {});
 }
 
+/* ===============================
+   VIEW CONTENT
+================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    /**
-     * Listener for the 'ViewContent' event.
-     * Fires when a user visits a product page.
-     */
-    if (window.location.pathname.includes('/products/')) {
-        const productHandle = window.location.pathname.split('/products/')[1];
-        if (productHandle) {
-            fetch(`/products/${productHandle}.js`)
-                .then(response => response.json())
-                .then(product => {
-                    trackEvent({
-                        eventName: 'ViewContent',
-                        productName: product.title,
-                        productImage: (product.featured_image || (product.images && product.images[0])) || 'N/A',
-                    });
-                }).catch(err => console.error('Error fetching product data for ViewContent:', err));
-        }
-    }
+  if (!location.pathname.includes('/products/')) return;
 
-    /**
-     * Listener for the 'AddToCart' event.
-     * Hooks into the 'click' event of Add to Cart buttons.
-     */
-    const addToCartButtons = document.querySelectorAll('form[action*="/cart/add"] button[type="submit"], .add-to-cart-button');
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const productHandle = window.location.pathname.split('/products/')[1];
-            if (productHandle) {
-                 fetch(`/products/${productHandle}.js`)
-                    .then(response => response.json())
-                    .then(product => {
-                        trackEvent({
-                            eventName: 'AddToCart',
-                            productName: product.title,
-                            productImage: (product.featured_image || (product.images && product.images[0])) || 'N/A',
-                        });
-                    }).catch(err => console.error('Error fetching product data for AddToCart:', err));
-            }
-        });
-    });
+  const handle = location.pathname.split('/products/')[1]?.split('?')[0];
+  if (!handle) return;
 
-    /**
-     * Listener for the 'InitiateCheckout' event.
-     * Fires when a user clicks a checkout button.
-     */
-    const checkoutButtons = document.querySelectorAll('[name="checkout"], .checkout-button, [href*="/checkout"]');
-    checkoutButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            fetch('/cart.js')
-                .then(response => response.json())
-                .then(cart => {
-                    if (cart.items && cart.items.length > 0) {
-                        const firstItem = cart.items[0];
-                        trackEvent({
-                            eventName: 'InitiateCheckout',
-                            productName: firstItem.product_title,
-                            productImage: firstItem.image || 'N/A',
-                        });
-                    } else {
-                        trackEvent({
-                            eventName: 'InitiateCheckout',
-                            productName: 'N/A',
-                            productImage: 'N/A',
-                        });
-                    }
-                }).catch(err => {
-                    console.error('Error fetching cart data for InitiateCheckout:', err);
-                    trackEvent({
-                        eventName: 'InitiateCheckout',
-                        productName: 'N/A',
-                        productImage: 'N/A',
-                    });
-                });
-        });
-    });
-
-    /**
-     * Listener for the 'Purchase' event.
-     * Fires on the 'Thank You' or order confirmation page.
-     */
-    if ((window.location.pathname.includes('/checkouts/') || window.location.pathname.includes('/orders/')) && typeof Shopify !== 'undefined' && Shopify.checkout) {
-        const order = Shopify.checkout;
-        order.line_items.forEach(item => {
-            trackEvent({
-                eventName: 'Purchase',
-                productName: item.title,
-                // Image is not available in the Shopify.checkout object on the thank you page.
-                // To get the image, an additional API call would be needed, but the product handle is not available here.
-                productImage: 'N/A',
-            });
-        });
-    }
+  fetch(`/products/${handle}.js`)
+    .then(r => r.json())
+    .then(product => {
+      trackEvent({
+        eventName: 'ViewContent',
+        source: 'dom',
+        productName: product.title,
+        productImage: product.featured_image || product.images?.[0] || 'N/A'
+      });
+    })
+    .catch(() => {});
 });
+
+/* ===============================
+   ADD TO CART
+================================ */
+document.addEventListener('click', e => {
+  const btn = e.target.closest(
+    'form[action*="/cart/add"] button[type="submit"], .add-to-cart-button'
+  );
+  if (!btn) return;
+
+  const handle = location.pathname.split('/products/')[1]?.split('?')[0];
+  if (!handle) return;
+
+  fetch(`/products/${handle}.js`)
+    .then(r => r.json())
+    .then(product => {
+      trackEvent({
+        eventName: 'AddToCart',
+        source: 'dom',
+        productName: product.title,
+        productImage: product.featured_image || product.images?.[0] || 'N/A'
+      });
+    })
+    .catch(() => {});
+});
+
+/* ===============================
+   INITIATE CHECKOUT (100% RELIABLE)
+================================ */
+(function initiateCheckoutTracker() {
+  let fired = false;
+
+  function fireInitiateCheckout() {
+    if (fired) return;
+    fired = true;
+
+    fetch('/cart.js')
+      .then(r => r.json())
+      .then(cart => {
+        trackEvent({
+          eventName: 'InitiateCheckout',
+          source: 'theme',
+          value: cart.total_price / 100,
+          currency: cart.currency,
+          contents: cart.items.map(i => ({
+            id: i.product_id,
+            variantId: i.variant_id,
+            quantity: i.quantity,
+            productName: i.product_title,
+            variantName: i.variant_title,
+            productImage: i.featured_image?.url || i.image || 'N/A',
+            price: i.price / 100,
+            linePrice: i.line_price / 100
+          }))
+        });
+      })
+      .catch(() => {
+        trackEvent({
+          eventName: 'InitiateCheckout',
+          source: 'theme'
+        });
+      });
+  }
+
+  // Normal checkout
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-checkout, [name="checkout"]');
+    if (!btn || btn.hasAttribute('disabled')) return;
+    fireInitiateCheckout();
+  });
+
+  // Dynamic checkout (Shop Pay / Apple Pay / GPay)
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-checkout-dynamic');
+    if (!btn || btn.classList.contains('disabled')) return;
+    fireInitiateCheckout();
+  });
+
+  // Redirect fallback
+  let lastUrl = location.href;
+  setInterval(() => {
+    if (!fired && lastUrl !== location.href && location.href.includes('/checkout')) {
+      fireInitiateCheckout();
+    }
+    lastUrl = location.href;
+  }, 250);
+})();
