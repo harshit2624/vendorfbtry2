@@ -21,6 +21,21 @@
             <h1>Product Performance Analytics</h1>
             <p>Product conversion funnels.</p>
 
+            <h2>Top View-to-ATC Rate Products</h2>
+            <div class="scrollable-row" id="top-view-to-atc-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
+            <h2>Top ATC-to-Checkout Rate Products</h2>
+            <div class="scrollable-row" id="top-atc-to-checkout-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
+            <h2>Top View-to-Checkout Rate Products</h2>
+            <div class="scrollable-row" id="top-view-to-checkout-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
             <form id="filter-form" class="filter-form">
                 <div class="filter-group">
                     <label for="period-filter">Time Period:</label>
@@ -31,6 +46,25 @@
                         <option value="last24hours">Last 24 Hours</option>
                         <option value="last7days">Last 7 Days</option>
                         <option value="last30days">Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sort-metric-filter">Sort by Metric:</label>
+                    <select id="sort-metric-filter">
+                        <option value="productName">Product Name</option>
+                        <option value="views">Views</option>
+                        <option value="atcs">ATCs</option>
+                        <option value="checkouts">Checkouts</option>
+                        <option value="atcRate">View-to-ATC %</option>
+                        <option value="checkoutRate">ATC-to-Checkout %</option>
+                        <option value="vtcRate">View-to-Checkout %</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sort-direction-filter">Direction:</label>
+                    <select id="sort-direction-filter">
+                        <option value="desc">High to Low</option>
+                        <option value="asc">Low to High</option>
                     </select>
                 </div>
                 <button type="button" id="filter-button" class="button">Apply Filter</button>
