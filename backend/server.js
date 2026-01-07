@@ -265,6 +265,47 @@ app.get('/top-checkout-products', async (req, res) => {
     }
 });
 
+app.get('/top-purchased-products', async (req, res) => {
+    const { storeCode, period } = req.query;
+
+    if (!storeCode) {
+        return res.status(400).send('storeCode is required');
+    }
+
+    const db = client.db('vendor_events');
+    const events = db.collection('events');
+
+    try {
+        const query = { storeCode, eventName: 'Purchase' };
+
+        if (period) {
+            Object.assign(query, getTimeFilter(period));
+        }
+
+        const topProducts = await events.aggregate([
+            { $match: query },
+            { $unwind: "$contents" },
+            { $group: {
+                _id: { productName: "$contents.productName", productImage: "$contents.productImage" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+            { $project: {
+                _id: 0,
+                productName: "$_id.productName",
+                productImage: "$_id.productImage",
+                count: 1
+            }}
+        ]).toArray();
+
+        res.status(200).json(topProducts);
+    } catch (err) {
+        console.error('Failed to fetch top purchased products', err);
+        res.status(500).send('Failed to fetch top purchased products');
+    }
+});
+
 app.get('/product-performance', async (req, res) => {
     const { storeCode, period } = req.query;
 
@@ -302,10 +343,20 @@ app.get('/product-performance', async (req, res) => {
             }}
         ];
 
-        const [viewCounts, atcCounts, checkoutCounts] = await Promise.all([
+        const purchasePipeline = [
+            { $match: { storeCode, eventName: 'Purchase', ...timeFilter } },
+            { $unwind: "$contents" },
+            { $group: {
+                _id: { productName: "$contents.productName", productImage: "$contents.productImage" },
+                count: { $sum: 1 }
+            }}
+        ];
+
+        const [viewCounts, atcCounts, checkoutCounts, purchaseCounts] = await Promise.all([
             events.aggregate(viewsPipeline).toArray(),
             events.aggregate(atcPipeline).toArray(),
-            events.aggregate(checkoutPipeline).toArray()
+            events.aggregate(checkoutPipeline).toArray(),
+            events.aggregate(purchasePipeline).toArray()
         ]);
 
         const productPerformance = {};
@@ -318,7 +369,8 @@ app.get('/product-performance', async (req, res) => {
                 productImage: item._id.productImage,
                 views: item.count,
                 atcs: 0,
-                checkouts: 0
+                checkouts: 0,
+                purchases: 0
             };
         });
 
@@ -333,7 +385,8 @@ app.get('/product-performance', async (req, res) => {
                     productImage: item._id.productImage,
                     views: 0,
                     atcs: item.count,
-                    checkouts: 0
+                    checkouts: 0,
+                    purchases: 0
                 };
             }
         });
@@ -349,7 +402,25 @@ app.get('/product-performance', async (req, res) => {
                     productImage: item._id.productImage,
                     views: 0,
                     atcs: 0,
-                    checkouts: item.count
+                    checkouts: item.count,
+                    purchases: 0
+                };
+            }
+        });
+
+        purchaseCounts.forEach(item => {
+            const productName = item._id.productName;
+            if (!productName) return;
+            if (productPerformance[productName]) {
+                productPerformance[productName].purchases = item.count;
+            } else {
+                productPerformance[productName] = {
+                    productName,
+                    productImage: item._id.productImage,
+                    views: 0,
+                    atcs: 0,
+                    checkouts: 0,
+                    purchases: item.count
                 };
             }
         });

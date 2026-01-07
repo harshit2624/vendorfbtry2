@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const topViewToAtcContainer = document.getElementById('top-view-to-atc-products');
     const topAtcToCheckoutContainer = document.getElementById('top-atc-to-checkout-products');
     const topViewToCheckoutContainer = document.getElementById('top-view-to-checkout-products');
+    const topViewToPurchaseContainer = document.getElementById('top-view-to-purchase-products');
     const periodFilter = document.getElementById('period-filter');
     const sortMetricFilter = document.getElementById('sort-metric-filter');
     const sortDirectionFilter = document.getElementById('sort-direction-filter');
@@ -27,14 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTopRatedProducts(data);
         } catch (error) {
             console.error('Error fetching analytics:', error);
-            analyticsTableBody.innerHTML = '<tr><td colspan="7">Failed to load analytics data.</td></tr>';
+            analyticsTableBody.innerHTML = '<tr><td colspan="9">Failed to load analytics data.</td></tr>';
         }
     }
 
     function renderAnalyticsTable(data) {
         analyticsTableBody.innerHTML = '';
         if (data.length === 0) {
-            analyticsTableBody.innerHTML = '<tr><td colspan="7">No product data available for the selected filters.</td></tr>';
+            analyticsTableBody.innerHTML = '<tr><td colspan="9">No product data available for the selected filters.</td></tr>';
             return;
         }
 
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             atcRate: p.views > 0 ? (p.atcs / p.views) * 100 : 0,
             checkoutRate: p.atcs > 0 ? (p.checkouts / p.atcs) * 100 : 0,
             vtcRate: p.views > 0 ? (p.checkouts / p.views) * 100 : 0,
+            vtpRate: p.views > 0 ? (p.purchases / p.views) * 100 : 0,
         }));
 
         const sortMetric = sortMetricFilter.value;
@@ -72,9 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${product.views}</td>
                 <td>${product.atcs}</td>
                 <td>${product.checkouts}</td>
+                <td>${product.purchases}</td>
                 <td>${product.atcRate.toFixed(2)}%</td>
                 <td>${product.checkoutRate.toFixed(2)}%</td>
                 <td>${product.vtcRate.toFixed(2)}%</td>
+                <td>${product.vtpRate.toFixed(2)}%</td>
             `;
             analyticsTableBody.appendChild(row);
         });
@@ -109,15 +113,18 @@ document.addEventListener('DOMContentLoaded', () => {
             atcRate: p.views > 0 ? (p.atcs / p.views) * 100 : 0,
             checkoutRate: p.atcs > 0 ? (p.checkouts / p.atcs) * 100 : 0,
             vtcRate: p.views > 0 ? (p.checkouts / p.views) * 100 : 0,
+            vtpRate: p.views > 0 ? (p.purchases / p.views) * 100 : 0,
         }));
 
         const topViewToAtc = [...withRates].filter(p => p.views > 0).sort((a, b) => b.atcRate - a.atcRate).slice(0, 10);
         const topAtcToCheckout = [...withRates].filter(p => p.atcs > 0).sort((a, b) => b.checkoutRate - a.checkoutRate).slice(0, 10);
         const topViewToCheckout = [...withRates].filter(p => p.views > 0).sort((a, b) => b.vtcRate - a.vtcRate).slice(0, 10);
+        const topViewToPurchase = [...withRates].filter(p => p.views > 0).sort((a, b) => b.vtpRate - a.vtpRate).slice(0, 10);
 
         renderProductRow(topViewToAtc, topViewToAtcContainer, 'View-to-ATC', 'atcRate');
         renderProductRow(topAtcToCheckout, topAtcToCheckoutContainer, 'ATC-to-Checkout', 'checkoutRate');
         renderProductRow(topViewToCheckout, topViewToCheckoutContainer, 'View-to-Checkout', 'vtcRate');
+        renderProductRow(topViewToPurchase, topViewToPurchaseContainer, 'View-to-Purchase', 'vtpRate');
     }
 
     filterButton.addEventListener('click', fetchAnalytics);

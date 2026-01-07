@@ -36,6 +36,11 @@
                 <!-- Product cards will be inserted here -->
             </div>
 
+            <h2>Top View-to-Purchase Rate Products</h2>
+            <div class="scrollable-row" id="top-view-to-purchase-products">
+                <!-- Product cards will be inserted here -->
+            </div>
+
             <form id="filter-form" class="filter-form">
                 <div class="filter-group">
                     <label for="period-filter">Time Period:</label>
@@ -55,9 +60,11 @@
                         <option value="views">Views</option>
                         <option value="atcs">ATCs</option>
                         <option value="checkouts">Checkouts</option>
+                        <option value="purchases">Purchases</option>
                         <option value="atcRate">View-to-ATC %</option>
                         <option value="checkoutRate">ATC-to-Checkout %</option>
                         <option value="vtcRate">View-to-Checkout %</option>
+                        <option value="vtpRate">View-to-Purchase %</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -78,9 +85,11 @@
                         <th>Views</th>
                         <th>ATCs</th>
                         <th>Checkouts</th>
+                        <th>Purchases</th>
                         <th>View-to-ATC %</th>
                         <th>ATC-to-Checkout %</th>
                         <th>View-to-Checkout %</th>
+                        <th>View-to-Purchase %</th>
                     </tr>
                 </thead>
                 <tbody id="analytics-table-body">
