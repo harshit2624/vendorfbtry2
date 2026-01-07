@@ -98,7 +98,7 @@ app.post('/track-event', async (req, res) => {
             timestamp: new Date()
         };
 
-        if (eventName === 'InitiateCheckout') {
+        if (eventName === 'InitiateCheckout' || eventName === 'Purchase') {
             eventData.value = value;
             eventData.currency = currency;
             eventData.contents = contents;
