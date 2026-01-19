@@ -30,11 +30,11 @@ This guide explains how to integrate the `tracker.js` script into your Shopify t
     // The vendor will need to change this to their unique store code.
     const STORE_CODE = 'your-unique-store-code';
     // The URL of your backend server.
-    const YOUR_SERVER_URL = 'http://localhost:3000';
+    const YOUR_SERVER_URL = 'https://pixeltracker24.onrender.com';
     ```
 
     *   **`STORE_CODE`**: Replace `'your-unique-store-code'` with the unique identifier for your store.
-    *   **`YOUR_SERVER_URL`**: Replace `'http://localhost:3000'` with the public URL of your backend server. (For local testing, this will likely be an `https` URL from a service like Ngrok).
+    *   **`YOUR_SERVER_URL`**: Replace `'https://pixeltracker24.onrender.com'` with the public URL of your backend server.
 
 3.  Click **Save**.
 

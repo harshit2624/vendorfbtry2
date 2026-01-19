@@ -5,7 +5,7 @@
 // -------- CONFIG --------
 const STORE_CODE = 'cccc';
 const BRAND_NAME = 'CROSCROW';
-const YOUR_SERVER_URL = 'https://pixeltracker-32pl.onrender.com';
+const YOUR_SERVER_URL = 'https://pixeltracker24.onrender.com';
 // ------------------------
 
 const firedEvents = {};

@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const backendUrl = 'https://pixeltracker-32pl.onrender.com';
+    const backendUrl = 'https://pixeltracker24.onrender.com';
 
     const analyticsTableBody = document.getElementById('analytics-table-body');
     const topViewToAtcContainer = document.getElementById('top-view-to-atc-products');

@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // The URL of your deployed backend server.
-    const backendUrl = 'https://pixeltracker-32pl.onrender.com';
+    const backendUrl = 'https://pixeltracker24.onrender.com';
 
     const eventsTableBody = document.getElementById('events-table-body');
     const topViewedContainer = document.getElementById('top-viewed-products');
